@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs/promises');
+const crypto = require('crypto');
 
 const app = express();
 app.use(bodyParser.json());
@@ -8,6 +9,7 @@ app.use(bodyParser.json());
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
 const errorMessage = { message: 'Pessoa palestrante não encontrada' };
+const emailValidation = /^\w+(\[\+\.-\]?\w)*@\w+(\[\.-\]?\w+)*\.[a-z]+$/i;
 
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
@@ -40,6 +42,22 @@ const routerTalkerId = async (req, res) => {
 };
 
 app.get('/talker/:id', routerTalkerId);
+
+function generateToken() {
+  const tokenId = crypto.randomBytes(8).toString('hex');
+  return { token: tokenId };
+}
+
+const postEmailPassword = (req, res) => {
+  const { email, password } = req.body;
+  if (emailValidation.test(email) && password.length >= 6) {
+    const token = generateToken();
+    return res.status(200).json(token);
+  }
+  res.status(400).json({ message: 'Email ou senha inválidos' });
+};
+
+app.post('/login', postEmailPassword);
 
 app.listen(PORT, () => {
   console.log('Online');

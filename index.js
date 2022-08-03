@@ -42,6 +42,33 @@ const routerTalkerId = async (req, res) => {
   res.status(404).json(errorMessage);
 };
 
+const checkToken = (req, res, next) => {
+  const { authorization } = req.headers;
+  if (!authorization) {
+    return res.status(401).json({ message: 'Token não encontrado' });
+  }
+  if (authorization.length < 16) {
+    return res.status(401).json({ message: 'Token inválido' });
+  }
+  next();
+};
+
+const searchTalker = async (req, res) => {
+  const { q } = req.query;
+  const talkers = await getTalkers();
+  if (!q || q.length === 0) {
+    return res.status(200).json(talkers);
+  }
+  const searchedTalker = talkers.filter((talker) => talker.name.includes(q));
+
+  // if (talker.length === 0 || !talker) {
+  //   return res.status(200).json([]);
+  // }
+  return res.status(200).json(searchedTalker);
+};
+
+app.get('/talker/search', checkToken, searchTalker);
+
 app.get('/talker/:id', routerTalkerId);
 
 const generateToken = () => {
@@ -67,17 +94,6 @@ const postEmailPassword = (req, res) => {
 };
 
 app.post('/login', postEmailPassword);
-
-const checkToken = (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization) {
-    return res.status(401).json({ message: 'Token não encontrado' });
-  }
-  if (authorization.length < 16) {
-    return res.status(401).json({ message: 'Token inválido' });
-  }
-  next();
-};
 
 const checkName = (req, res, next) => {
   const { name } = req.body;
@@ -140,7 +156,7 @@ const postTalker = async (req, res) => {
     res.status(201).send(newTalker);
     talkers.push(newTalker);
     fs.writeFile('./talker.json', JSON.stringify(talkers));
-};
+  };
 
 app.post('/talker',
   checkToken, checkName, checkAge, checkTalk, checkTalkWatchedAt, checkTalkRate, postTalker);
@@ -170,14 +186,6 @@ const deleteTalker = async (req, res) => {
 };
 
 app.delete('/talker/:id', checkToken, deleteTalker);
-
-// const searchTalker = async (req, res) => {
-//   const { q } = req.query;
-//   const talkers = await getTalkers();
-
-// }
-
-// app.get('/talker/search', checkToken, searchTalker);
 
 app.listen(PORT, () => {
   console.log('Online');

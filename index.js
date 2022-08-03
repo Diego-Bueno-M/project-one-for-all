@@ -159,6 +159,26 @@ const putTalker = async (req, res) => {
 app.put('/talker/:id',
   checkToken, checkName, checkAge, checkTalk, checkTalkWatchedAt, checkTalkRate, putTalker);
 
+const deleteTalker = async (req, res) => {
+  const { id } = req.params;
+  const talkers = await getTalkers();
+  const talkerIndex = talkers.findIndex((r) => r.id === Number(id));
+
+  talkers.splice(talkerIndex, 1);
+  res.status(204).end();
+  fs.writeFile('./talker.json', JSON.stringify(talkers));
+};
+
+app.delete('/talker/:id', checkToken, deleteTalker);
+
+// const searchTalker = async (req, res) => {
+//   const { q } = req.query;
+//   const talkers = await getTalkers();
+
+// }
+
+// app.get('/talker/search', checkToken, searchTalker);
+
 app.listen(PORT, () => {
   console.log('Online');
 });

@@ -43,18 +43,26 @@ const routerTalkerId = async (req, res) => {
 
 app.get('/talker/:id', routerTalkerId);
 
-function generateToken() {
+const generateToken = () => {
   const tokenId = crypto.randomBytes(8).toString('hex');
   return { token: tokenId };
-}
+};
 
 const postEmailPassword = (req, res) => {
   const { email, password } = req.body;
-  if (emailValidation.test(email) && password.length >= 6) {
-    const token = generateToken();
-    return res.status(200).json(token);
+  if (!email) {
+    return res.status(400).json({ message: 'O campo "email" é obrigatório' });
   }
-  res.status(400).json({ message: 'Email ou senha inválidos' });
+  if (!emailValidation.test(email)) {
+    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  if (!password) {
+    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+  res.status(200).json(generateToken());
 };
 
 app.post('/login', postEmailPassword);
